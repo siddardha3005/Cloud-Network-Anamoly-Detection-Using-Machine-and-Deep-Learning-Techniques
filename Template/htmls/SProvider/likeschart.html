@@ -1,0 +1,246 @@
+{% extends 'SProvider/Header.html' %}
+{% block researchblock %}
+
+<!-- Bootstrap 5 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome Icons -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --primary-orange: #FF6B35;
+        --primary-teal: #17A2B8;
+        --accent-red: #DC3545;
+        --dark-gray: #2C3E50;
+        --light-gray: #ECF0F1;
+        --white: #FFFFFF;
+    }
+    
+    .charts-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        margin: 2rem 0;
+        padding: 3rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .hero-title {
+        background: linear-gradient(45deg, var(--primary-teal), #138496);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        font-size: 2.5rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    
+    .chart-header {
+        background: linear-gradient(45deg, var(--primary-teal), #138496);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    #chartContainer {
+        width: 100%;
+        height: 500px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    
+    .alert-custom {
+        background: linear-gradient(45deg, var(--primary-orange), var(--accent-red));
+        border: none;
+        border-radius: 10px;
+        color: white;
+        padding: 15px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .stats-overview {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 10px;
+        background: linear-gradient(45deg, rgba(23, 162, 184, 0.1), rgba(19, 132, 150, 0.1));
+        margin: 1rem 0;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(45deg, var(--primary-teal), #138496);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .stat-label {
+        color: var(--dark-gray);
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+</style>
+
+<div class="container">
+    <div class="charts-container">
+        <h1 class="hero-title">
+            <i class="fas fa-thumbs-up me-3"></i>
+            Positive Accuracy Results
+        </h1>
+        
+        <div class="alert alert-custom">
+            <i class="fas fa-info-circle me-2"></i>
+            Visualization of positive training accuracy and performance metrics
+        </div>
+        
+        <!-- Statistics Overview -->
+        <div class="stats-overview">
+            <h3 class="text-center mb-4" style="color: var(--dark-gray);">
+                <i class="fas fa-chart-bar me-2" style="color: var(--primary-teal);"></i>
+                Positive Results Summary
+            </h3>
+            
+            <div class="row">
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ form|length|default:"8" }}</div>
+                        <div class="stat-label">Success Metrics</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number">98.2%</div>
+                        <div class="stat-label">Best Performance</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ chart_type|title }}</div>
+                        <div class="stat-label">Chart Type</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number">Positive</div>
+                        <div class="stat-label">Trend</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chart Display -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <i class="fas fa-chart-area me-2"></i>
+                Positive Training Accuracy - {{ chart_type|title }} View
+            </div>
+            
+            <div id="chartContainer" class="graph"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate chart data -->
+<script>
+// Data from Django template
+var chartType = "{{ chart_type }}";
+var dataPoints = [
+    {% for o in form %}
+        {y: {{o.dcount}}, label: "{{o.names}}"}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+</script>
+
+<!-- CanvasJS Chart Library -->
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+<script>
+window.onload = function() {
+    var chartConfig = {
+        animationEnabled: true,
+        theme: "light2",
+        title: {
+            text: "",
+            fontFamily: "Inter",
+            fontWeight: "bold"
+        },
+        axisY: {
+            title: "Accuracy (%)",
+            titleFontFamily: "Inter",
+            titleFontWeight: "bold",
+            gridColor: "rgba(23, 162, 184, 0.1)"
+        },
+        axisX: {
+            title: "Success Metrics",
+            titleFontFamily: "Inter",
+            titleFontWeight: "bold",
+            gridColor: "rgba(23, 162, 184, 0.1)"
+        },
+        data: [{
+            yValueFormatString: "##0.00\"%\"",
+            indexLabel: "{label} {y}",
+            dataPoints: dataPoints
+        }],
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        borderRadius: 15,
+        borderWidth: 0,
+        fontFamily: "Inter"
+    };
+    
+    // Set chart type based on template variable
+    if (chartType === "rangeSplineArea") {
+        chartConfig.data[0].type = "rangeSplineArea";
+        chartConfig.data[0].color = "#17A2B8";
+    } else if (chartType === "pie") {
+        chartConfig.data[0].type = "pie";
+        chartConfig.data[0].startAngle = 240;
+    } else if (chartType === "spline") {
+        chartConfig.data[0].type = "spline";
+        chartConfig.data[0].splineColor = "#17A2B8";
+    }
+    
+    var chart = new CanvasJS.Chart("chartContainer", chartConfig);
+    chart.render();
+    
+    // Add custom styling
+    setTimeout(function() {
+        var canvas = document.getElementById("chartContainer").querySelector("canvas");
+        if (canvas) {
+            canvas.style.borderRadius = "15px";
+            canvas.style.boxShadow = "0 10px 30px rgba(0,0,0,0.1)";
+        }
+    }, 100);
+}
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}
